@@ -2,70 +2,82 @@ var request  = require('request')
 	,	_	 = require('lodash')
 	, moment = require('moment')
 	, today  = moment()
+	, querystring = require('querystring')
 
-var Redmine = function(endpoint, apiKey){
+var Redmine = function(host, apiKey){
 	this.apiKey = apiKey
-	this.endpoint = endpoint
+	this.host = host
 }
 
-Redmine.prototype.api = function(method, options, callback){
-	var self 	= this
-		,	url 	= null
-		,	options = options || {}
-		,	results = []
+Redmine.prototype.createPath = function(path, params){
+  if (path.slice(0, 1) != '/') {
+    path = '/' + path;
+  }
+  return this.host + path + '?' + querystring.stringify(params);
+}
 
-	if(typeof options === 'function'){
-		callback = options
-		options = {}
+Redmine.prototype.api = function(path, opts, callback){
+	var self 		 = this
+		,	url 		 = null
+		,	opts 		 = opts || {}
+		,	results  = []
+		, numRows  = 100
+		, reqOpts	 = null
+		, i 			 = 0
+		,	reqCount = null
+
+
+	if(typeof opts === 'function'){
+		callback = opts
+		opts = {}
 	}
 
-	_.extend(options, {
+	if(typeof opts.limit !== 'undefined'){
+		numRows = opts.limit
+		delete opts.limit
+	}
+
+	_.defaults(opts, {
 		format	: 'json',
 		limit	: 100,
 		offset	: 0,
-		dateFrom: moment().subtract('week', 1)
+		method: 'GET',
+		period_type: 1,
+		period: moment().subtract('week', 1).format('YYYY-MM-DD')
 	})
+	
+	reqCount = Math.ceil(numRows / opts.limit)
 
-	var offset = options.offset
-
-	function next(condition){
-		url = self.endpoint + method + '.' + options.format + '?' 
-		+ 'limit=' + options.limit + '&offset=' + offset
-		+ '&key=' + self.apiKey
-
-		request(url, function (err, res, body) {
-			if (!err && res.statusCode == 200) {
-				var result 		= JSON.parse(body)[method]
-				var oldItem 	= moment(result[0].spent_on).unix()
-					,	itemDate	= null
-
-				_.each(result, function(item){					
-					itemDate = moment(item.spent_on)
-					itemDate = (oldItem < itemDate) ? oldItem : itemDate
-				})			
-				if(itemDate > moment(condition).unix()){
-					offset += 100
-					results = results.concat(result)
-					next(condition)						
+	for (i = 0; i < reqCount; i++) {
+		(function(i){			
+			url = self.host + path + '.' + opts.format + '?'
+		
+			reqOpts = {
+		    url: opts.method == 'GET' ? self.createPath(path, opts) : path,
+		    method: opts.method,
+		    headers: {
+		      'X-Redmine-API-Key': self.apiKey
+		    }
+		  }
+		  opts.offset += opts.limit		  
+			request(reqOpts, function (err, res, body) {
+				if (!err && res.statusCode == 200) {
+					var items = JSON.parse(body)[path]
+					if(reqCount){						
+						results = results.concat(items)						
+					}
+					reqCount--
+					if( (typeof callback === 'function' && !reqCount) || items.length < opts.limit)	
+						callback(null, results)		
 				}else{
-					if(typeof callback === 'function') callback(null,results)
-				}		
-			}else{
-				if(typeof callback === 'function') callback(err,null)
-			}
-
-		})
+					if(typeof callback === 'function') 
+						callback(err, null)
+				}
+			})
+		})(i)
 	}
-	next(options.dateFrom)
 	return;
 }
-
-var redmine = new Redmine('http://redmine.buenosaires.gob.ar/','883475b5c3ada34d6236a89496f45a5f422d1ddf')
-redmine.api('time_entries', function(err, res){
-	console.log(res)
-});
-
-
 
 
 
