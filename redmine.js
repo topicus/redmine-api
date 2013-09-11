@@ -1,10 +1,14 @@
+'use strict'
+
 var request  = require('request')
 	,	_	 = require('lodash')
 	, moment = require('moment')
 	, today  = moment()
 	, querystring = require('querystring')
 
-var Redmine = function(host, apiKey){
+function Redmine(host, apiKey){
+  if (!host || !apiKey)
+    throw new Error("Error: apiKey and host are required")
 	this.apiKey = apiKey
 	this.host = host
 }
@@ -16,7 +20,7 @@ Redmine.prototype.createPath = function(path, params){
   return this.host + path + '?' + querystring.stringify(params);
 }
 
-Redmine.prototype.api = function(path, opts, callback){
+Redmine.prototype.api = function(path, opts, cb){
 	var self 		 = this
 		,	url 		 = null
 		,	opts 		 = opts || {}
@@ -26,9 +30,8 @@ Redmine.prototype.api = function(path, opts, callback){
 		, i 			 = 0
 		,	reqCount = null
 
-
 	if(typeof opts === 'function'){
-		callback = opts
+		cb = opts
 		opts = {}
 	}
 
@@ -63,15 +66,14 @@ Redmine.prototype.api = function(path, opts, callback){
 			request(reqOpts, function (err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var items = JSON.parse(body)[path]
-					if(reqCount){						
+					if(reqCount)				
 						results = results.concat(items)						
-					}
 					reqCount--
-					if( (typeof callback === 'function' && !reqCount) || items.length < opts.limit)	
-						callback(null, results)		
+					if((typeof cb === 'function' && !reqCount) || items.length < opts.limit)	
+						cb(null, results)		
 				}else{
-					if(typeof callback === 'function') 
-						callback(err, null)
+					if(typeof cb === 'function') 
+						cb(err, null)
 				}
 			})
 		})(i)
@@ -79,13 +81,4 @@ Redmine.prototype.api = function(path, opts, callback){
 	return;
 }
 
-
-
-
-
-
-
-
-
-
-
+module.exports = Redmine

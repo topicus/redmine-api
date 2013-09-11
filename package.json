@@ -1,0 +1,17 @@
+{
+  "name": "redmine-api",
+  "description": "",
+  "version": "0.0.0",
+  "main": "redmine-api.js",
+  "devDependencies": {
+    "chai": "*",
+    "mocha": "*",
+    "request": "*",
+    "lodash": "*",
+    "moment": "*",
+    "querystring": "*"
+  },
+  "scripts": {
+    "test": "mocha --no-colors --reporter spec"
+  }
+}
