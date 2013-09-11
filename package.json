@@ -12,6 +12,6 @@
     "querystring": "*"
   },
   "scripts": {
-    "test": "mocha --no-colors --reporter spec"
+    "test": "mocha --reporter spec"
   }
 }

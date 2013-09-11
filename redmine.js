@@ -7,17 +7,16 @@ var request  = require('request')
 	, querystring = require('querystring')
 
 function Redmine(host, apiKey){
-  if (!host || !apiKey)
-    throw new Error("Error: apiKey and host are required")
+  if (!host || !apiKey){
+  	throw new Error("Error: apiKey and host are required")  	
+  }
 	this.apiKey = apiKey
 	this.host = host
 }
 
 Redmine.prototype.createPath = function(path, params){
-  if (path.slice(0, 1) != '/') {
-    path = '/' + path;
-  }
-  return this.host + path + '?' + querystring.stringify(params);
+  path = (path.slice(0, 1) != '/') ? path = '/' + path : path
+  return this.host + path + '?' + querystring.stringify(params)
 }
 
 Redmine.prototype.api = function(path, opts, cb){
@@ -45,8 +44,6 @@ Redmine.prototype.api = function(path, opts, cb){
 		limit	: 100,
 		offset	: 0,
 		method: 'GET',
-		period_type: 1,
-		period: moment().subtract('week', 1).format('YYYY-MM-DD')
 	})
 	
 	reqCount = Math.ceil(numRows / opts.limit)
@@ -66,14 +63,17 @@ Redmine.prototype.api = function(path, opts, cb){
 			request(reqOpts, function (err, res, body) {
 				if (!err && res.statusCode == 200) {
 					var items = JSON.parse(body)[path]
-					if(reqCount)				
-						results = results.concat(items)						
+					if(reqCount){
+						results = results.concat(items)												
+					}				
 					reqCount--
-					if((typeof cb === 'function' && !reqCount) || items.length < opts.limit)	
-						cb(null, results)		
+					if((_.isFunction(cb) && !reqCount) || items.length < opts.limit){
+						cb(null, results)								
+					}	
 				}else{
-					if(typeof cb === 'function') 
+					if(_.isFunction(cb)){
 						cb(err, null)
+					}
 				}
 			})
 		})(i)
