@@ -1,7 +1,7 @@
 {
   "name": "redmine-api",
   "description": "",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "main": "redmine-api.js",
   "devDependencies": {
     "chai": "*",
