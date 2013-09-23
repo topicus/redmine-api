@@ -23,6 +23,7 @@ describe('#call small with limit', function () {
 describe('#call with huge limit', function () {
     it('should return 200 user', function (done) {
         redmine.api('users', {numRows:200}, function(err, res){
+          console.log('LONGITUD: ',res.length);
           if (err) return done(err);
           res.should.have.length(200);
           done();
