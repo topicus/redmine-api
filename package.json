@@ -11,6 +11,12 @@
     "moment": "*",
     "querystring": "*"
   },
+  "dependencies":{
+    "request": "*",
+    "lodash": "*",
+    "moment": "*",
+    "querystring": "*"
+  },
   "scripts": {
     "test": "mocha --reporter spec"
   }
